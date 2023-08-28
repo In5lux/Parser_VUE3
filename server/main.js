@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import process from 'node:process';
 import {
   myEmitter,
   dbPath,
@@ -24,10 +25,10 @@ export let searchParams = {};
 const isProduction = process.env.NODE_ENV === 'production';
 
 export const runServer = async () => {
-  const root = `${__dirname}/..`
-  let isRunning = false; 
+  const root = `${__dirname}/..`;
+  let isRunning = false;
 
-  const viewPath = path.join(__dirname, 'views');  
+  const viewPath = path.join(__dirname, 'views');
 
   const app = express();
 
@@ -37,18 +38,18 @@ export const runServer = async () => {
 
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
-  app.use(cors());  
+  app.use(cors());
 
-  if(isProduction){    
+  if (isProduction) {
     app.use(sirv(`${root}/dist`));
-  } 
+  }
 
   const port = 3000;
 
   const server = http.createServer(app);
   const io = new Server(server, {
     cors: {
-      origin: 'http://localhost:5173',
+      origin: `http://localhost:${isProduction ? port : '5173'}`,
       credentials: true
     }
   });
@@ -93,11 +94,7 @@ export const runServer = async () => {
     io.to('room').emit('executor', JSON.stringify(dataInfo));
   });
 
-  app.get('/', (req, res) => {   
-    //res.sendFile(path.join(__dirname, 'public/index.html'));    
-    //res.render('index', { message: 'Необходимо выбрать параметры поиска' });
-    //res.send()
-  });
+  //app.get('/', (req, res) => {});
 
   app.get('/parse', (req, res) => {
     searchParams = req.query;
@@ -106,7 +103,7 @@ export const runServer = async () => {
       myEmitter.emit('next');
     }
     res.json(Status.get());
-  });  
+  });
 
   app.get('/search', (req, res) => {
     searchParams = req.query;

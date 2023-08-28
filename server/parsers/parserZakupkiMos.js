@@ -12,6 +12,7 @@ import { priceFilter } from '../helpers/priceFilter.js';
 import { collectData } from '../helpers/collectData.js';
 import { searchParams } from '../main.js';
 import { Template } from '../mailer/template/mail-template.service.js';
+import { constructMessage } from '../helpers/constructMessage.js';
 
 const parserZakupkiMos = () => {
   let delay = 0;
@@ -61,10 +62,10 @@ const parserZakupkiMos = () => {
 
     const browser = await puppeteer.launch({
       // executablePath: revisionInfo.executablePath,
-      // headless: true, // false: enables one to view the Chrome instance in action
+      headless: 'new', // false: enables one to view the Chrome instance in action
       // defaultViewport: { width: 1263, height: 930 }, // optional
-      slowMo: 25,
-      args: ['--no-sandbox', '--headless', '--disable-gpu']
+      slowMo: 25
+      //args: ['--no-sandbox', '--headless', '--disable-gpu']
     });
 
     let count = queries.length;
@@ -180,21 +181,11 @@ const parserZakupkiMos = () => {
                   if (isNew(db, result.number)) {
                     db.push(result);
                     writeFileSync(dbPath, JSON.stringify(db));
-                    const message =
-                      `*Номер закупки:* ${result.number}\n\n` +
-                      `*Тип закупки:* ${result.type}\n\n` +
-                      `*ФЗ:* ${result.law}\n\n` +
-                      `*Статус:* ${result.status}\n\n` +
-                      `*Клиент:* ${result.customer}\n\n` +
-                      `*Описание:* ${result.description}\n\n` +
-                      `*Цена:* ${result.price}\n\n` +
-                      `*Дата публикации:* ${result.published}\n\n` +
-                      `*Окончание:* ${result.end}\n\n` +
-                      `*Ссылка:* ${result.link}`;
+                    const message = constructMessage(result);
 
                     setTimeout(() => {
                       bot.telegram.sendMessage(process.env.CHAT_ID, message, {
-                        parse_mode: 'Markdown'
+                        parse_mode: 'HTML'
                       });
                       mailer.send(new Template([result]));
                     }, delay);
