@@ -12,6 +12,10 @@ import { collectData } from '../helpers/collectData.js';
 import { searchParams } from '../main.js';
 import { Template } from '../mailer/template/mail-template.service.js';
 import { constructMessage } from '../helpers/constructMessage.js';
+import QUERIES from '../configs/queries.js';
+import puppeteerConfig from '../configs/puppeteerConfig.js';
+import pageUserAgent from '../configs/pageUserAgent.js';
+import telegramMsgConfig from '../configs/telegramMsgConfig.js';
 
 const parserB2BCenter = () => {
   let delay = 0;
@@ -26,25 +30,7 @@ const parserB2BCenter = () => {
 
   // Формат — node -s "цена контракта (число)" -d "дата публикации закупки (дд.мм.гггг)" -q "поисковый запрос (строка)"
 
-  const queries = args.q
-    ? [args.q]
-    : [
-        'Организация командировок',
-        'Организация деловых поездок',
-        'Служебных поездок',
-        'Проездных документов ',
-        'Бронирование билетов',
-        'Оформление авиабилетов',
-        'Служебных командирований',
-        'Командированию сотрудников',
-        'Служебных командировок',
-        'Проживание экипажей',
-        'Обеспечение авиабилетами',
-        'Обеспечение авиационными билетами',
-        'Пассажирские авиаперевозки иностранных граждан',
-        'Оказание услуг связанных с бронированием',
-        'Оказание услуг по организации командирования'
-      ];
+  const queries = args.q ? [args.q] : QUERIES.B2BCenter;
 
   const parseResults = [];
 
@@ -55,20 +41,13 @@ const parserB2BCenter = () => {
   );
 
   const parseData = async (minPrice, queries) => {
-    const browser = await puppeteer.launch({
-      headless: 'new', // false: enables one to view the Chrome instance in action
-      defaultViewport: { width: 1400, height: 700 }, // optional
-      slowMo: 25
-      //args: ['--no-sandbox', '--headless', '--disable-gpu']
-    });
+    const browser = await puppeteer.launch(puppeteerConfig);
 
     let count = queries.length;
 
     for (const query of queries) {
       const page = await browser.newPage();
-      page.setUserAgent(
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
-      );
+      page.setUserAgent(pageUserAgent);
       let HTML = false;
       let attempts = 0;
       const url = 'https://www.b2b-center.ru/market/';
@@ -151,9 +130,11 @@ const parserB2BCenter = () => {
                     const message = constructMessage(result);
 
                     setTimeout(() => {
-                      bot.telegram.sendMessage(process.env.CHAT_ID, message, {
-                        parse_mode: 'HTML'
-                      });
+                      bot.telegram.sendMessage(
+                        process.env.CHAT_ID,
+                        message,
+                        telegramMsgConfig
+                      );
                       mailer.send(new Template([result]));
                     }, delay);
                     delay += 1000;

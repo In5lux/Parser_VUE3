@@ -11,6 +11,10 @@ import { priceFilter } from '../helpers/priceFilter.js';
 import { searchParams } from '../main.js';
 import { Template } from '../mailer/template/mail-template.service.js';
 import { constructMessage } from '../helpers/constructMessage.js';
+import QUERIES from '../configs/queries.js';
+import puppeteerConfig from '../configs/puppeteerConfig.js';
+import pageUserAgent from '../configs/pageUserAgent.js';
+import telegramMsgConfig from '../configs/telegramMsgConfig.js';
 
 const parserSberbankAst = () => {
   let delay = 0;
@@ -25,29 +29,7 @@ const parserSberbankAst = () => {
 
   // Формат — node -s "цена контракта (число)" -d "дата публикации закупки (дд.мм.гггг)" -q "поисковый запрос (строка)"
 
-  const queries = args.q
-    ? [args.q]
-    : [
-        'Организация командировок',
-        'Организация деловых поездок',
-        'Служебных поездок',
-        'Выдворение',
-        'Проездных документов ',
-        'Бронирование билетов',
-        'Оформление авиабилетов',
-        'Служебных командирований',
-        'Командированию сотрудников',
-        'Служебных командировок',
-        'Проживание экипажей',
-        'Обеспечение авиабилетами',
-        'Обеспечение авиационными билетами',
-        'Организации воздушных перевозок',
-        'Перевозкам воздушным транспортом',
-        'Пассажирские авиаперевозки иностранных граждан',
-        'Оказание услуг связанных с бронированием',
-        'Оказание услуг по организации командирования',
-        'Билетного аутсорсинга'
-      ];
+  const queries = args.q ? [args.q] : QUERIES.SberbankAst;
 
   const parseResults = [];
 
@@ -61,13 +43,7 @@ const parserSberbankAst = () => {
     // const browserFetcher = puppeteer.createBrowserFetcher();
     // const revisionInfo = await browserFetcher.download('991974');
 
-    const browser = await puppeteer.launch({
-      // executablePath: revisionInfo.executablePath,
-      headless: 'new', // false: enables one to view the Chrome instance in action
-      defaultViewport: { width: 1263, height: 807 }, // optional
-      slowMo: 25
-      //args: ['--no-sandbox', '--headless', '--disable-gpu']
-    });
+    const browser = await puppeteer.launch(puppeteerConfig);
 
     let count = queries.length;
 
@@ -80,9 +56,7 @@ const parserSberbankAst = () => {
         await dialog.accept();
       });
       //page.setDefaultNavigationTimeout(0);
-      page.setUserAgent(
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
-      );
+      page.setUserAgent(pageUserAgent);
       // await page.waitForTimeout(3000);
       try {
         await page.goto('https://www.sberbank-ast.ru', { waitUntil: 'load' });
@@ -171,9 +145,11 @@ const parserSberbankAst = () => {
                     const message = constructMessage(result);
 
                     setTimeout(() => {
-                      bot.telegram.sendMessage(process.env.CHAT_ID, message, {
-                        parse_mode: 'HTML'
-                      });
+                      bot.telegram.sendMessage(
+                        process.env.CHAT_ID,
+                        message,
+                        telegramMsgConfig
+                      );
                       mailer.send(new Template([result]));
                     }, delay);
                     delay += 1000;

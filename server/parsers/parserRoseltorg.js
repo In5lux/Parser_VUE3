@@ -12,6 +12,10 @@ import { priceFilter } from '../helpers/priceFilter.js';
 import { searchParams } from '../main.js';
 import { Template } from '../mailer/template/mail-template.service.js';
 import { constructMessage } from '../helpers/constructMessage.js';
+import QUERIES from '../configs/queries.js';
+import puppeteerConfig from '../configs/puppeteerConfig.js';
+import pageUserAgent from '../configs/pageUserAgent.js';
+import telegramMsgConfig from '../configs/telegramMsgConfig.js';
 
 const parserRoseltorg = () => {
   let delay = 0;
@@ -38,24 +42,7 @@ const parserRoseltorg = () => {
 
   console.log(args.q);
 
-  const queries = args.q
-    ? [args.q]
-    : [
-        'Авиационным транспортом',
-        'Авиабилетов',
-        'Деловых поездок',
-        'Служебных поездок',
-        'Выдворение',
-        'Бронирование билетов',
-        'Авиационных билетов',
-        'Железнодорожных билетов',
-        'Командировок',
-        'Командирований',
-        'Обеспечение авиационными билетами',
-        'Авиаперевозки',
-        'Билетного аутсорсинга',
-        'Безденежному оформлению и предоставлению'
-      ];
+  const queries = args.q ? [args.q] : QUERIES.Roseltorg;
 
   const parseResults = [];
 
@@ -69,13 +56,7 @@ const parserRoseltorg = () => {
     // const browserFetcher = puppeteer.createBrowserFetcher();
     // const revisionInfo = await browserFetcher.download('991974');
 
-    const browser = await puppeteer.launch({
-      // executablePath: revisionInfo.executablePath,
-      headless: 'new', // false: enables one to view the Chrome instance in action
-      // defaultViewport: { width: 1263, height: 930 }, // optional
-      slowMo: 25
-      //args: ['--no-sandbox', '--headless', '--disable-gpu']
-    });
+    const browser = await puppeteer.launch(puppeteerConfig);
 
     let count = queries.length;
 
@@ -83,9 +64,7 @@ const parserRoseltorg = () => {
       const url = new UrlEncode(date, query).url;
       const page = await browser.newPage();
       page.setDefaultNavigationTimeout(0);
-      page.setUserAgent(
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
-      );
+      page.setUserAgent(pageUserAgent);
       // page.on('load', () => console.log('Loaded!', page.url()));
       // page.on('domcontentloaded', () => console.log('dom fired'));
       // await page.waitForTimeout(3000);
@@ -228,9 +207,11 @@ const parserRoseltorg = () => {
                     const message = constructMessage(result);
 
                     setTimeout(() => {
-                      bot.telegram.sendMessage(process.env.CHAT_ID, message, {
-                        parse_mode: 'HTML'
-                      });
+                      bot.telegram.sendMessage(
+                        process.env.CHAT_ID,
+                        message,
+                        telegramMsgConfig
+                      );
                       mailer.send(new Template([result]));
                     }, delay);
                     delay += 1000;

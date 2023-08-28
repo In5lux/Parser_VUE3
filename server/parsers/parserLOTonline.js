@@ -11,6 +11,10 @@ import { priceFilter } from '../helpers/priceFilter.js';
 import { searchParams } from '../main.js';
 import { Template } from '../mailer/template/mail-template.service.js';
 import { constructMessage } from '../helpers/constructMessage.js';
+import QUERIES from '../configs/queries.js';
+import puppeteerConfig from '../configs/puppeteerConfig.js';
+import pageUserAgent from '../configs/pageUserAgent.js';
+import telegramMsgConfig from '../configs/telegramMsgConfig.js';
 
 const parserLOTonline = () => {
   let delay = 0;
@@ -33,17 +37,7 @@ const parserLOTonline = () => {
     }
   }
 
-  const queries = args.q
-    ? [args.q]
-    : [
-        'Командировок',
-        'Деловых поездок',
-        'Служебных поездок',
-        'Проездных документов ',
-        'Бронирование авиабилетов',
-        'Оформление авиабилетов',
-        'Билетного аутсорсинга'
-      ];
+  const queries = args.q ? [args.q] : QUERIES.LOTonline;
 
   const parseResults = [];
 
@@ -57,13 +51,7 @@ const parserLOTonline = () => {
     // const browserFetcher = puppeteer.createBrowserFetcher();
     // const revisionInfo = await browserFetcher.download('991974');
 
-    const browser = await puppeteer.launch({
-      // executablePath: revisionInfo.executablePath,
-      headless: 'new', // false: enables one to view the Chrome instance in action
-      // defaultViewport: { width: 1263, height: 930 }, // optional
-      slowMo: 25
-      //args: ['--no-sandbox', '--headless', '--disable-gpu']
-    });
+    const browser = await puppeteer.launch(puppeteerConfig);
 
     let count = queries.length;
 
@@ -71,9 +59,7 @@ const parserLOTonline = () => {
       const url = new UrlEncode(query).url;
       const page = await browser.newPage();
       page.setDefaultNavigationTimeout(0);
-      page.setUserAgent(
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
-      );
+      page.setUserAgent(pageUserAgent);
       await page.goto(url, { waitUntil: 'load' });
       await new Promise((r) => setTimeout(r, 1000));
       // await page.setViewport({ width: 1263, height: 930 });
@@ -176,9 +162,11 @@ const parserLOTonline = () => {
                   const message = constructMessage(result);
 
                   setTimeout(() => {
-                    bot.telegram.sendMessage(process.env.CHAT_ID, message, {
-                      parse_mode: 'HTML'
-                    });
+                    bot.telegram.sendMessage(
+                      process.env.CHAT_ID,
+                      message,
+                      telegramMsgConfig
+                    );
                     mailer.send(new Template([result]));
                   }, delay);
                   delay += 1000;

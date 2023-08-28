@@ -12,13 +12,15 @@ import { priceFilter } from '../helpers/priceFilter.js';
 import { searchParams } from '../main.js';
 import { Template } from '../mailer/template/mail-template.service.js';
 import { constructMessage } from '../helpers/constructMessage.js';
+import QUERIES from '../configs/queries.js';
+import pageUserAgent from '../configs/pageUserAgent.js';
+import telegramMsgConfig from '../configs/telegramMsgConfig.js';
 
 const parserZakupkiGov = () => {
   const _axios = axios.create({
     timeout: 15_000,
     headers: {
-      'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
+      'User-Agent': pageUserAgent
     }
   });
 
@@ -55,43 +57,7 @@ const parserZakupkiGov = () => {
     }
   }
 
-  const queries = args.q
-    ? [args.q]
-    : [
-        'Оказания услуг по бронированию, оформлению, продаже, обмену и возврату авиабилетов',
-        'Организация командировок',
-        'Организация деловых поездок',
-        'Командировки',
-        'Служебных поездок',
-        'Выдворение',
-        'Перевозок департируемых',
-        'Проездных документов ',
-        'Бронирование билетов',
-        'Оформление авиабилетов',
-        'Авиационных билетов',
-        'Железнодорожных билетов',
-        'Служебных командировок',
-        'Служебных командирований',
-        'Служебных командировок',
-        'Гостиничные услуги',
-        'Проживание экипажей',
-        'Обеспечение авиабилетами',
-        'Обеспечение авиационными билетами',
-        'Организации воздушных перевозок',
-        'Перевозкам воздушным транспортом',
-        'Бронирование мест на авиарейсы, оформлению и продаже авиабилетов',
-        'Пассажирские авиаперевозки иностранных граждан',
-        'Оказание услуг связанных с бронированием',
-        'Оказание услуг по реализации авиа, ж/д билетов',
-        'Оказание услуг по организации командирования',
-        'Билетного аутсорсинга',
-        'Деловых мероприятий',
-        'Протокольных мероприятий',
-        'Безденежному оформлению и предоставлению',
-        'Организации перевозок по территории РФ',
-        'Транспортно экспедиторское обслуживание',
-        'Бронированию мест размещения'
-      ];
+  const queries = args.q ? [args.q] : QUERIES.default;
 
   let countQueries = queries.length;
 
@@ -167,9 +133,11 @@ const parserZakupkiGov = () => {
                 const message = constructMessage(result);
 
                 setTimeout(() => {
-                  bot.telegram.sendMessage(process.env.CHAT_ID, message, {
-                    parse_mode: 'HTML'
-                  });
+                  bot.telegram.sendMessage(
+                    process.env.CHAT_ID,
+                    message,
+                    telegramMsgConfig
+                  );
                   mailer.send(new Template([result]));
                 }, delay);
                 delay += 1000;

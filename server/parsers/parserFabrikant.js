@@ -12,6 +12,9 @@ import { priceFilter } from '../helpers/priceFilter.js';
 import { searchParams } from '../main.js';
 import { Template } from '../mailer/template/mail-template.service.js';
 import { constructMessage } from '../helpers/constructMessage.js';
+import QUERIES from '../configs/queries.js';
+import pageUserAgent from '../configs/pageUserAgent.js';
+import telegramMsgConfig from '../configs/telegramMsgConfig.js';
 
 const parserFabrikant = () => {
   let delay = 0;
@@ -36,31 +39,7 @@ const parserFabrikant = () => {
     }
   }
 
-  const queries = args.q
-    ? [args.q]
-    : [
-        'Оказания услуг по бронированию, оформлению, продаже, обмену и возврату авиабилетов',
-        'Организация командировок',
-        'Организация деловых поездок',
-        'Служебных поездок',
-        'Выдворение',
-        'Перевозок департируемых',
-        'Проездных документов ',
-        'Бронирование билетов',
-        'Оформление авиабилетов',
-        'Организации воздушных перевозок',
-        'Перевозкам воздушным транспортом',
-        'Служебных командирований',
-        'Командированию сотрудников',
-        'Служебных командировок',
-        'Проживание экипажей',
-        'Обеспечение авиабилетами',
-        'Обеспечение авиационными билетами',
-        'Пассажирские авиаперевозки иностранных граждан',
-        'Оказание услуг связанных с бронированием',
-        'Оказание услуг по организации командирования',
-        'Билетного аутсорсинга'
-      ];
+  const queries = args.q ? [args.q] : QUERIES.Fabrikant;
 
   let countQueries = queries.length;
 
@@ -154,9 +133,11 @@ const parserFabrikant = () => {
                 const message = constructMessage(result);
 
                 setTimeout(() => {
-                  bot.telegram.sendMessage(process.env.CHAT_ID, message, {
-                    parse_mode: 'HTML'
-                  });
+                  bot.telegram.sendMessage(
+                    process.env.CHAT_ID,
+                    message,
+                    telegramMsgConfig
+                  );
                   mailer.send(new Template([result]));
                 }, delay);
                 delay += 1000;
@@ -188,8 +169,7 @@ const parserFabrikant = () => {
       .get(url, {
         timeout: 15_000,
         headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
+          'User-Agent': pageUserAgent
         }
       })
       .then((res) => {

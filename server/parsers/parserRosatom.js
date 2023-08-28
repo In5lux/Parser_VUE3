@@ -11,6 +11,9 @@ import { priceFilter } from '../helpers/priceFilter.js';
 import { searchParams } from '../main.js';
 import { Template } from '../mailer/template/mail-template.service.js';
 import { constructMessage } from '../helpers/constructMessage.js';
+import QUERIES from '../configs/queries.js';
+import pageUserAgent from '../configs/pageUserAgent.js';
+import telegramMsgConfig from '../configs/telegramMsgConfig.js';
 
 const parserRosatom = () => {
   let delay = 0;
@@ -33,25 +36,7 @@ const parserRosatom = () => {
     }
   }
 
-  const queries = args.q
-    ? [args.q]
-    : [
-        'Деловых поездок',
-        'Проездных документов',
-        'Служебных поездок',
-        'Авиабилетов',
-        'Авиационных билетов',
-        'Организации воздушных перевозок',
-        'Перевозкам воздушным транспортом',
-        'Железнодорожных билетов',
-        'Служебных командировок',
-        'Командированию сотрудников',
-        'Командирований',
-        'Оказание услуг по организации командирования',
-        'Транспортного обслуживания',
-        'Протокольных мероприятий',
-        'Билетного аутсорсинга'
-      ];
+  const queries = args.q ? [args.q] : QUERIES.Rosatom;
 
   let countQueries = queries.length;
 
@@ -116,9 +101,11 @@ const parserRosatom = () => {
               const message = constructMessage(result);
 
               setTimeout(() => {
-                bot.telegram.sendMessage(process.env.CHAT_ID, message, {
-                  parse_mode: 'HTML'
-                });
+                bot.telegram.sendMessage(
+                  process.env.CHAT_ID,
+                  message,
+                  telegramMsgConfig
+                );
                 mailer.send(new Template([result]));
               }, delay);
               delay += 1000;
@@ -151,8 +138,7 @@ const parserRosatom = () => {
       .get(url, {
         timeout: 15_000,
         headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
+          'User-Agent': pageUserAgent
         }
       })
       .then((res) => {
