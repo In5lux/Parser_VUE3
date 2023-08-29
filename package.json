@@ -1,6 +1,6 @@
 {
   "name": "parser-vue-3",
-  "version": "0.0.0",
+  "version": "2.3.0",
   "type": "module",
   "scripts": {
     "start": "cross-env NODE_ENV=production node server/index.js -- -server",
@@ -29,7 +29,7 @@
     "sirv": "^2.0.3",
     "socket.io": "^4.7.1",
     "socket.io-client": "^4.7.1",
-    "telegraf": "^4.12.2",    
+    "telegraf": "^4.12.2",
     "vue": "^3.2.38"
   },
   "devDependencies": {
