@@ -13,7 +13,10 @@ import { readFileSync, writeFileSync } from 'fs';
 import { Server } from 'socket.io';
 import http from 'http';
 import bodyParser from 'body-parser';
-import { txtFilterByStopWords } from './helpers/textFilter.js';
+import {
+  txtFilterByStopWords,
+  delCustomerNameForm
+} from './helpers/textFilter.js';
 import { validateSearchParams } from './helpers/validateSearchParams.js';
 import { Template } from './mailer/template/mail-template.service.js';
 import { Status } from './helpers/status.js';
@@ -146,6 +149,23 @@ export const runServer = async () => {
         ? res.json({ items: data.reverse() })
         : res.json({ message: 'Ничего не найдено' });
     }
+  });
+
+  app.get('/get-customers', (req, res) => {
+    searchParams = req.query;
+
+    let data = JSON.parse(readFileSync(dbPath, 'utf-8'));
+
+    data = data
+      .filter((item) => txtFilterByStopWords(item.description))
+      .filter(
+        (item) => item.customer.toLowerCase().indexOf(searchParams.client) != -1
+      )
+      .map((item) => delCustomerNameForm(item.customer));
+
+    data.length != 0
+      ? res.json({ items: Array.from(new Set(data)) })
+      : res.json({ message: 'Ничего не найдено' });
   });
 
   app.get('/db', (req, res) => {

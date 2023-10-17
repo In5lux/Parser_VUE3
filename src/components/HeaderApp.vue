@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { dateFormat } from '../methods/dateFormat';
 import { useItemsStore } from '../stores/items';
 import { socket } from '../socket';
 import { CONFIG } from '../config/config';
 import ProgressBar from './ProgressBar.vue';
+import CityTooltip from './CityTooltip.vue';
+import { hideScroll, setScroll } from '../methods/scroll';
 
 const itemsList = useItemsStore();
 
@@ -28,7 +30,7 @@ const searchDate = ref(initDates.value.searchDate);
 
 //const a: number = 'ssss';
 
-const customer = ref<string | null>();
+const customer = ref<string>();
 const desc = ref<string | null>();
 const lastUpTime = ref<string>();
 const statusCurrent = ref<string>();
@@ -37,10 +39,45 @@ const executor = ref<string>();
 const maxProgress = ref(0);
 const parsingProgress = ref(0);
 const message = ref<string | null>();
+const customerList = ref<string[] | null>();
+
+//customerList.value = ['Росатом', 'Атомэнергопроект'];
 
 defineExpose({ message });
 
-function parse() {
+watch(customer, () => {
+  if (customer.value && customer.value.trim().length > 3) {
+    const searchParams: ISearchParams = {};
+    searchParams.client = customer.value.trim();
+    fetch(
+      HOST +
+        ':' +
+        PORT +
+        '/get-customers?' +
+        new URLSearchParams(searchParams).toString(),
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    ).then(async (res) => {
+      let result = JSON.parse(await res.text());
+      if (result.items) {
+        customerList.value = result.items;
+        message.value = null;
+      }
+      if (result.message) {
+        itemsList.setItems(null);
+        message.value = result.message;
+      }
+    });
+  } else {
+    customerList.value = null;
+  }
+});
+
+function parse(): void {
   isError.value = false;
   socket.emit('send mess', 'Start parsing');
   const searchParams: ISearchParams = {
@@ -58,7 +95,7 @@ function parse() {
   });
 }
 
-async function search() {
+async function search(): Promise<void> {
   isError.value = false;
   const searchParams: ISearchParams = {};
 
@@ -105,10 +142,10 @@ async function search() {
     });
 }
 
-function dateChange(event: Event) {
+function dateChange(event: Event): void {
   isError.value = false;
   desc.value = null;
-  customer.value = null;
+  customer.value = '';
   document.querySelector('.start-msg')?.remove();
   const value = (event.target as HTMLInputElement).value;
   date.value = value;
@@ -146,7 +183,7 @@ function dateChange(event: Event) {
     });
 }
 
-async function addStopWord() {
+async function addStopWord(): Promise<void> {
   const searchParams: ISearchParams = {};
   if (desc.value) {
     searchParams.desc = desc.value;
@@ -208,7 +245,7 @@ async function addStopWord() {
   }
 }
 
-function stopWordEditor() {  
+function stopWordEditor(): void {
   fetch(HOST + ':' + PORT + '/stopwords', {
     method: 'GET',
     headers: {
@@ -217,6 +254,30 @@ function stopWordEditor() {
   }).then(async (res) => {
     let result = JSON.parse(await res.text());
     emit('stop-word-editor', result);
+  });
+}
+
+function setCustomer(selectedCustomer: string): void {
+  const searchParams: ISearchParams = {};
+  searchParams.client = selectedCustomer;
+
+  fetch(
+    HOST +
+      ':' +
+      PORT +
+      '/search?' +
+      new URLSearchParams(searchParams).toString(),
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }
+  ).then(async (res) => {
+    let result = JSON.parse(await res.text());
+    if (result.items) {
+      itemsList.setItems(result.items); // Store
+    }
   });
 }
 
@@ -245,16 +306,29 @@ socket.on('executor', async function (data) {
         type="date"
         v-bind:value="date"
         v-on:change="dateChange"
-        aria-label="date"        
+        aria-label="date"
         :disabled="disable"
       />
-      <input
-        v-model="customer"
-        type="text"
-        placeholder="Поиск по заказчику"
-        aria-label="Customer search"        
-        :disabled="disable"
-      />
+      <div class="customer-input">
+        <input
+          v-model="customer"
+          type="text"
+          placeholder="Поиск по заказчику"
+          aria-label="Customer search"
+          :disabled="disable"
+        />
+        <CityTooltip
+          @mouseover="hideScroll"
+          @mouseleave="setScroll"
+          v-if="customerList"
+          @select-customer="setCustomer"          
+          :customers="customerList"
+          class="tooltip"
+          :class="{
+            'tooltip-visible': customerList && customerList.length > 0
+          }"
+        />
+      </div>
       <input
         v-model="desc"
         type="text"
@@ -262,8 +336,12 @@ socket.on('executor', async function (data) {
         aria-label="Description search"
         :disabled="disable"
       />
-      <button id="search" v-on:click.prevent="search" :disabled="disable">Искать</button>
-      <button id="parse" v-on:click.prevent="parse" :disabled="disable">Обновить</button>
+      <button id="search" v-on:click.prevent="search" :disabled="disable">
+        Искать
+      </button>
+      <button id="parse" v-on:click.prevent="parse" :disabled="disable">
+        Обновить
+      </button>
       <span class="msg" v-if="isError == true"
         >Ошибка: {{ statusCurrent }}</span
       >
@@ -288,8 +366,8 @@ socket.on('executor', async function (data) {
         />
       </button>
     </form>
-    <ProgressBar :value="parsingProgress" :max="maxProgress" />        
-  </header>  
+    <ProgressBar :value="parsingProgress" :max="maxProgress" />
+  </header>
 </template>
 
 <style scoped>
@@ -347,5 +425,35 @@ form {
     rgb(255, 245, 100) 100%
   );
   color: #fff;
+}
+
+.customer-input {
+  position: relative;
+}
+
+.tooltip {
+  visibility: hidden;
+  min-width: 165px;
+  min-height: 100%;
+  max-height: 90vh;
+  max-width: 80vw;
+  background-color: #fff;
+  border-radius: 5px;
+  border: 1px solid #aeaeae;
+  overflow: auto;
+  position: absolute;
+  z-index: 1;
+  padding: 5px;
+  top: 30px;
+  left: 5px;
+  opacity: 0;
+  transition: opacity 0.5s;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+.customer-input:hover .tooltip-visible {
+  visibility: visible;
+  opacity: 1;
 }
 </style>
