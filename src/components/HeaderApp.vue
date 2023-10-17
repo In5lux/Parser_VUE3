@@ -8,6 +8,8 @@ import ProgressBar from './ProgressBar.vue';
 
 const itemsList = useItemsStore();
 
+defineProps<{ disable: boolean }>();
+
 const { HOST, PORT } = CONFIG;
 
 type ISearchParams = Record<string, string>;
@@ -24,6 +26,8 @@ const emit = defineEmits(['send-stop-word', 'stop-word-editor']);
 const date = ref(initDates.value.date);
 const searchDate = ref(initDates.value.searchDate);
 
+//const a: number = 'ssss';
+
 const customer = ref<string | null>();
 const desc = ref<string | null>();
 const lastUpTime = ref<string>();
@@ -34,7 +38,7 @@ const maxProgress = ref(0);
 const parsingProgress = ref(0);
 const message = ref<string | null>();
 
-defineExpose({message});
+defineExpose({ message });
 
 function parse() {
   isError.value = false;
@@ -68,7 +72,12 @@ async function search() {
     searchParams.date = date.value.split('-').reverse().join('.');
   }
 
-  fetch(HOST + ':' + PORT + '/search?' + new URLSearchParams(searchParams).toString(),
+  fetch(
+    HOST +
+      ':' +
+      PORT +
+      '/search?' +
+      new URLSearchParams(searchParams).toString(),
     {
       method: 'GET',
       headers: {
@@ -146,8 +155,8 @@ async function addStopWord() {
   } else {
     searchParams.date = date.value.split('-').reverse().join('.');
   }
-  const stopWords = getSelection()?.toString().trim();  
-  
+  const stopWords = getSelection()?.toString().trim();
+
   if (stopWords) {
     let response = await fetch(`${HOST}:${PORT}/stopwords`, {
       method: 'POST',
@@ -156,11 +165,16 @@ async function addStopWord() {
       },
       body: JSON.stringify([stopWords])
     });
-    let result = (await response.text()).replace(/\'/g, '"');
-        
+    let result = (await response.text()).replace(/'/g, '"');
+
     emit('send-stop-word', result);
 
-    fetch(HOST + ':' + PORT + '/search?' + new URLSearchParams(searchParams).toString(),
+    fetch(
+      HOST +
+        ':' +
+        PORT +
+        '/search?' +
+        new URLSearchParams(searchParams).toString(),
       {
         method: 'GET',
         headers: {
@@ -177,7 +191,7 @@ async function addStopWord() {
         if (result.message) {
           itemsList.setItems(null);
           message.value = result.message;
-        }        
+        }
       })
       .catch((error) => {
         isError.value = true;
@@ -187,21 +201,23 @@ async function addStopWord() {
         );
       });
   } else {
-    emit('send-stop-word', 'Не выделено слово для добавления в список стоп-слов');    
-  }    
+    emit(
+      'send-stop-word',
+      'Не выделено слово для добавления в список стоп-слов'
+    );
+  }
 }
 
 function stopWordEditor() {  
-  
   fetch(HOST + ':' + PORT + '/stopwords', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json'
     }
   }).then(async (res) => {
-    let result = JSON.parse(await res.text());    
+    let result = JSON.parse(await res.text());
     emit('stop-word-editor', result);
-  });  
+  });
 }
 
 socket.on('connect', () => {
@@ -229,22 +245,25 @@ socket.on('executor', async function (data) {
         type="date"
         v-bind:value="date"
         v-on:change="dateChange"
-        aria-label="date"
+        aria-label="date"        
+        :disabled="disable"
       />
       <input
         v-model="customer"
         type="text"
         placeholder="Поиск по заказчику"
-        aria-label="Customer search"
+        aria-label="Customer search"        
+        :disabled="disable"
       />
       <input
         v-model="desc"
         type="text"
         placeholder="Поиск в описании"
         aria-label="Description search"
+        :disabled="disable"
       />
-      <button id="search" v-on:click.prevent="search">Искать</button>
-      <button id="parse" v-on:click.prevent="parse">Обновить</button>
+      <button id="search" v-on:click.prevent="search" :disabled="disable">Искать</button>
+      <button id="parse" v-on:click.prevent="parse" :disabled="disable">Обновить</button>
       <span class="msg" v-if="isError == true"
         >Ошибка: {{ statusCurrent }}</span
       >
@@ -258,9 +277,10 @@ socket.on('executor', async function (data) {
         class="stop-word"
         v-on:click.exact.prevent="addStopWord"
         v-on:click.prevent.alt.exact="stopWordEditor"
+        :disabled="disable"
       >
         <img
-          src="../assets/img/stop.svg"
+          src="@/assets/img/stop.svg"
           width="20"
           height="20"
           title="Добавление стоп-слова в базу"
@@ -268,8 +288,8 @@ socket.on('executor', async function (data) {
         />
       </button>
     </form>
-    <ProgressBar :value="parsingProgress" :max="maxProgress" />
-  </header>
+    <ProgressBar :value="parsingProgress" :max="maxProgress" />        
+  </header>  
 </template>
 
 <style scoped>
@@ -291,7 +311,7 @@ form {
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: start;
+  justify-content: flex-start;
   flex-wrap: wrap;
   padding-left: 15px;
 }
@@ -329,4 +349,3 @@ form {
   color: #fff;
 }
 </style>
-../helpers/dateFormat

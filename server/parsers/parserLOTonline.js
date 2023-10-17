@@ -61,7 +61,7 @@ const parserLOTonline = () => {
       page.setDefaultNavigationTimeout(0);
       page.setUserAgent(pageUserAgent);
       await page.goto(url, { waitUntil: 'load' });
-      await new Promise((r) => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 3000));
       // await page.setViewport({ width: 1263, height: 930 });
       // await page.waitForSelector('div.mat-expansion-panel-body div div input');
       // await page.focus('div.mat-expansion-panel-body div div input');

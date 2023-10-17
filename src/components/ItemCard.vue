@@ -17,11 +17,10 @@ async function sendMail(event: Event) {
     },
     body: JSON.stringify([id])
   }).then(async (res) => {
-    let result: string = await res.text(); 
-    emit('send-mail', result);    
+    let result: string = await res.text();
+    emit('send-mail', result);
   });
 }
-
 </script>
 
 <template>
@@ -46,10 +45,10 @@ async function sendMail(event: Event) {
       >
     </p>
     <img
-      src="../assets/img/mail.png"
+      src="@/assets/img/mail.png"
       alt="Отправить на email"
       width="40"
-      @click.prevent="sendMail"      
+      @click.prevent="sendMail"
       :id="item.number"
       class="mail"
     />
@@ -63,10 +62,11 @@ async function sendMail(event: Event) {
   padding: 20px;
   margin: 20px;
   border: 2px solid rgb(12, 0, 124, 0.1);
+  background-color: rgba(252, 251, 229, 0.8);
   border-radius: 10px;
 }
 .item-card:hover {
-  background-color: linen;
+  background-color: rgba(252, 251, 229, 1);
   box-shadow: 0px 0px 5px 5px rgba(0, 0, 0, 0.2);
   border: 2px solid linen;
 }

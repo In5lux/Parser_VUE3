@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineProps<{
-  informerMsg: string | undefined;  
+  informerMsg: string | undefined;
 }>();
 </script>
 
