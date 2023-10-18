@@ -12,7 +12,7 @@ WORKDIR /opt/app
 ADD *.json *.cjs ./
 RUN npm install
 ADD . .
-RUN npm build && npm prune --production
+RUN npm run build && npm prune --production
 RUN unlink /etc/localtime \
 	&& ln -s /usr/share/zoneinfo/Europe/Moscow /etc/localtime
 EXPOSE 3000

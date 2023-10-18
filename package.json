@@ -1,6 +1,6 @@
 {
   "name": "parser-vue-3",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "type": "module",
   "scripts": {
     "start": "cross-env NODE_ENV=production node server/index.js -- -server",

@@ -1,5 +1,5 @@
 import { fileURLToPath, URL } from 'node:url';
-import { defineConfig } from 'vite';
+import { defineConfig, splitVendorChunkPlugin } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 import VitePluginWebpAndPath from 'vite-plugin-webp-and-path';
@@ -15,6 +15,7 @@ export default defineConfig({
     //     progressive: true,                               
     //   },                  
     // }),  
+    splitVendorChunkPlugin(),
     VitePluginWebpAndPath({
       quality: 70
     }),

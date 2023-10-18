@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { dateFormat } from '../methods/dateFormat';
 import { useItemsStore } from '../stores/items';
 import { socket } from '../socket';
 import { CONFIG } from '../config/config';
 import ProgressBar from './ProgressBar.vue';
 import CityTooltip from './CityTooltip.vue';
 import { hideScroll, setScroll } from '../methods/scroll';
+import { debounce } from '../methods/debounce';
+import { format } from 'date-fns';
 
 const itemsList = useItemsStore();
 
@@ -17,18 +18,21 @@ const { HOST, PORT } = CONFIG;
 type ISearchParams = Record<string, string>;
 
 const initDates = computed(() => {
+  const curentDate = new Date();
+
   return {
-    date: dateFormat(new Date()),
-    searchDate: dateFormat(new Date()).split('-').reverse().join('.')
+    date: format(curentDate, 'yyyy-MM-dd'),
+    searchDate: format(curentDate, 'dd.MM.yyyy')
   };
 });
+
+
+
 
 const emit = defineEmits(['send-stop-word', 'stop-word-editor']);
 
 const date = ref(initDates.value.date);
 const searchDate = ref(initDates.value.searchDate);
-
-//const a: number = 'ssss';
 
 const customer = ref<string>();
 const desc = ref<string | null>();
@@ -40,13 +44,16 @@ const maxProgress = ref(0);
 const parsingProgress = ref(0);
 const message = ref<string | null>();
 const customerList = ref<string[] | null>();
-
-//customerList.value = ['Росатом', 'Атомэнергопроект'];
+const debouncedCustomerList = debounce(getCustomerList, 1000);
 
 defineExpose({ message });
 
 watch(customer, () => {
-  if (customer.value && customer.value.trim().length > 3) {
+  debouncedCustomerList(customer.value);
+});
+
+function getCustomerList(): void {
+  if (customer.value && customer.value.trim().length >= 3) {
     const searchParams: ISearchParams = {};
     searchParams.client = customer.value.trim();
     fetch(
@@ -75,7 +82,7 @@ watch(customer, () => {
   } else {
     customerList.value = null;
   }
-});
+}
 
 function parse(): void {
   isError.value = false;
@@ -316,12 +323,13 @@ socket.on('executor', async function (data) {
           placeholder="Поиск по заказчику"
           aria-label="Customer search"
           :disabled="disable"
+          maxlength="20"
         />
         <CityTooltip
-          @mouseover="hideScroll"
-          @mouseleave="setScroll"
           v-if="customerList"
-          @select-customer="setCustomer"          
+          @select-customer="setCustomer"
+          @mouseenter="hideScroll"
+          @mouseleave="setScroll"
           :customers="customerList"
           class="tooltip"
           :class="{
@@ -335,6 +343,7 @@ socket.on('executor', async function (data) {
         placeholder="Поиск в описании"
         aria-label="Description search"
         :disabled="disable"
+        maxlength="20"
       />
       <button id="search" v-on:click.prevent="search" :disabled="disable">
         Искать
