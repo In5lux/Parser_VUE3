@@ -64,6 +64,7 @@ async function sendMail(event: Event) {
   border: 2px solid rgb(12, 0, 124, 0.1);
   background-color: rgba(252, 251, 229, 0.8);
   border-radius: 10px;
+  min-width: calc(100vw-44px);
 }
 .item-card:hover {
   background-color: rgba(252, 251, 229, 1);

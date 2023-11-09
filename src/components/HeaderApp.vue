@@ -17,7 +17,7 @@ const { HOST, PORT } = CONFIG;
 type ISearchParams = Record<string, string>;
 
 const initDates = computed(() => {
-  const currentDate = new Date();
+const currentDate = new Date();
 
   return {
     date: format(currentDate, 'yyyy-MM-dd'),
@@ -352,6 +352,7 @@ socket.on('executor', async function (data) {
       >
       <span
         class="msg"
+        :class="{ disabled: disable }"
         v-if="isError == false"
         v-bind:title="statusCurrent == 'Парсинг' ? executor : undefined"
         >Последнее обновление: {{ lastUpTime }} {{ statusCurrent }}
@@ -460,5 +461,8 @@ form {
 .customer-input:hover .tooltip-visible {
   visibility: visible;
   opacity: 1;
+}
+.disabled {
+  opacity: 0.5;
 }
 </style>

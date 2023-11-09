@@ -88,7 +88,7 @@ const closeStopwordsEditor = (): void => {
         openStopwordsEditor(wordsList);
       }
     "
-    :disable="isStopwordsEditor"
+    :disable="isStopwordsEditor || isActive"
   />
   <main
     v-on:click.exact="$setScroll(), closeInfo()"
@@ -99,9 +99,12 @@ const closeStopwordsEditor = (): void => {
       v-else-if="!props?.message && !itemsList.items?.length"
       :message="'Необходимо выбрать параметры поиска'"
     />
-    <template v-for="item in itemsList.items" :key="item.number">
-      <ItemCard @send-mail="$hideScroll, showInfo" :item="item" />
-    </template>
+    <TransitionGroup name="item_list">
+      <div v-for="item in itemsList.items" :key="item.number">
+        <ItemCard @send-mail="$hideScroll, showInfo" :item="item" />
+      </div>
+    </TransitionGroup>
+
     <InformerMessage v-if="isActive" :informerMsg="informerMsg" />
     <StopwordsEditor
       v-if="isStopwordsEditor"
@@ -113,4 +116,22 @@ const closeStopwordsEditor = (): void => {
 
 <style scoped>
 @import url('./assets/main.css');
+.item_list-move,
+.item_list-enter-active {
+  transition: all 0.5s ease;
+}
+.item_list-leave-active {
+  transition: all 0s ease;
+}
+.item_list-leave-to {
+  opacity: 0;
+  /* transform: translateX(1000px); */
+}
+.item_list-enter-from {
+  opacity: 0;
+  transform: translateY(-500px);
+}
+.item_list-leave-active {
+  position: absolute;
+}
 </style>
