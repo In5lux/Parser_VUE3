@@ -5,7 +5,6 @@ import { socket } from '../socket';
 import { CONFIG } from '../config/config';
 import ProgressBar from './ProgressBar.vue';
 import CityTooltip from './CityTooltip.vue';
-import { hideScroll, setScroll } from '../methods/scroll';
 import { debounce } from '../methods/debounce';
 import { format } from 'date-fns';
 
@@ -18,16 +17,13 @@ const { HOST, PORT } = CONFIG;
 type ISearchParams = Record<string, string>;
 
 const initDates = computed(() => {
-  const curentDate = new Date();
+  const currentDate = new Date();
 
   return {
-    date: format(curentDate, 'yyyy-MM-dd'),
-    searchDate: format(curentDate, 'dd.MM.yyyy')
+    date: format(currentDate, 'yyyy-MM-dd'),
+    searchDate: format(currentDate, 'dd.MM.yyyy')
   };
 });
-
-
-
 
 const emit = defineEmits(['send-stop-word', 'stop-word-editor']);
 
@@ -328,8 +324,8 @@ socket.on('executor', async function (data) {
         <CityTooltip
           v-if="customerList"
           @select-customer="setCustomer"
-          @mouseenter="hideScroll"
-          @mouseleave="setScroll"
+          @mouseenter="$hideScroll"
+          @mouseleave="$setScroll"
           :customers="customerList"
           class="tooltip"
           :class="{
