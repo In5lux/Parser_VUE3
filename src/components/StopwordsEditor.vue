@@ -3,11 +3,14 @@ defineProps<{
   stopwordsList: string[] | undefined;
 }>();
 
-defineEmits(['stop-word-delete']);
+defineEmits(['stop-word-delete', 'click']);
 </script>
 
 <template>
-  <div class="stopwords-editor-background">
+  <div
+    class="stopwords-editor-background"
+    @click.self.prevent="$setScroll(), $emit('click')"
+  >
     <div class="stop-words-editor">
       <span
         class="word"
@@ -30,17 +33,18 @@ defineEmits(['stop-word-delete']);
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;  
+  height: 100%;
+  z-index: 10;
 }
 
 .stop-words-editor {
   background-color: #fff;
-  position: fixed;  
+  position: fixed;
   border: 1px solid #ccc;
-  padding: 25px;  
+  padding: 25px;
   border-radius: 15px;
   /* box-shadow: 0px 0px 20px darkslategray; */
-  box-shadow:  0 0 0 25px #fff, 0 0 20px 30px darkslategray;
+  box-shadow: 0 0 0 25px #fff, 0 0 20px 30px darkslategray;
   max-width: 80%;
   max-height: 500px;
   overflow-y: scroll;
@@ -48,7 +52,7 @@ defineEmits(['stop-word-delete']);
 }
 
 .stop-words-editor::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 
 .word {

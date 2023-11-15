@@ -1,13 +1,15 @@
 <script setup lang="ts">
 defineProps<{
-  informerMsg: string | undefined;
+  informerMsg: string | undefined;  
 }>();
+
+const emit = defineEmits(['click']);
 </script>
 
 <template>
-  <div class="informer-background">
-    <div class="stop-word-informer">{{ informerMsg }}</div>
-  </div>
+  <div class="informer-background" @click.self.prevent="$setScroll(), emit('click')">
+    <div class="stop-word-informer">{{ informerMsg }}</div>    
+  </div>  
 </template>
 
 <style scoped>
@@ -21,6 +23,7 @@ defineProps<{
   left: 0;
   width: 100%;
   height: 100%;
+  z-index: 10;
 }
 
 .stop-word-informer {

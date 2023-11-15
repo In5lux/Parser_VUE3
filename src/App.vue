@@ -90,10 +90,7 @@ const closeStopwordsEditor = (): void => {
     "
     :disable="isStopwordsEditor || isActive"
   />
-  <main
-    v-on:click.exact="$setScroll(), closeInfo()"
-    v-on:click.ctrl.exact="$setScroll(), closeStopwordsEditor()"
-  >
+  <main>
     <SearchMessage v-if="props?.message" :message="props.message" />
     <SearchMessage
       v-else-if="!props?.message && !itemsList.items?.length"
@@ -104,13 +101,19 @@ const closeStopwordsEditor = (): void => {
         <ItemCard @send-mail="$hideScroll, showInfo" :item="item" />
       </div>
     </TransitionGroup>
-
-    <InformerMessage v-if="isActive" :informerMsg="informerMsg" />
-    <StopwordsEditor
-      v-if="isStopwordsEditor"
-      :stopwordsList="stopwordsList"
-      @stop-word-delete="stopWordDelete"
-    />
+    <Teleport to="body">
+      <InformerMessage
+        @click="isActive = false"
+        v-if="isActive"
+        :informerMsg="informerMsg"
+      />
+      <StopwordsEditor
+        @click="isStopwordsEditor = false"
+        v-if="isStopwordsEditor"
+        :stopwordsList="stopwordsList"
+        @stop-word-delete="stopWordDelete"
+      />
+    </Teleport>
   </main>
 </template>
 
